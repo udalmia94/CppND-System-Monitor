@@ -17,17 +17,25 @@ using std::vector;
 
 You need to properly format the uptime. Refer to the comments mentioned in format. cpp for formatting the uptime.*/
 
-// TODO: Return the system's CPU
+System::System() {
+  cpu_ = Processor();
+  Processes();
+}
+
+// DONE: Return the system's CPU
 Processor& System::Cpu() { return cpu_; }
 
 // DONE: Return a container composed of the system's processes
 vector<Process>& System::Processes() {
   auto pids = LinuxParser::Pids();
+  processes_ = {};
   for (int pid : pids) {
-    if (pid > 25000) {
     Process new_process = Process(pid);
-    processes_.push_back(new_process);}
+    processes_.emplace_back(new_process);
   }
+
+  std::sort(processes_.begin(), processes_.end());
+
   return processes_;
 }
 
@@ -43,7 +51,7 @@ std::string System::OperatingSystem() { return LinuxParser::OperatingSystem(); }
 // DONE: Return the number of processes actively running on the system
 int System::RunningProcesses() { return LinuxParser::RunningProcesses(); }
 
-// TODO: Return the total number of processes on the system
+// DONE: Return the total number of processes on the system
 int System::TotalProcesses() { return LinuxParser::TotalProcesses(); }
 
 // DONE: Return the number of seconds since the system started running

@@ -59,7 +59,7 @@ vector<int> LinuxParser::Pids() {
       string filename(file->d_name);
       if (std::all_of(filename.begin(), filename.end(), isdigit)) {
         int pid = stoi(filename);
-        pids.push_back(pid);
+        pids.emplace_back(pid);
       }
     }
   }
@@ -104,18 +104,49 @@ long LinuxParser::UpTime() {
   return uptime;
 }
 
-// TODO: Read and return the number of jiffies for the system
-long LinuxParser::Jiffies() { return 0; }
+// DONE: Read and return the number of jiffies for the system
+long LinuxParser::Jiffies() {
+  auto cpu_data = LinuxParser::CpuUtilization();
+  long total_jiffies = 0;
+  for (int i = 0; i < 10; i++) {
+    total_jiffies += stol(cpu_data[i]);
+  }
+  return total_jiffies;
+}
 
-// TODO: Read and return the number of active jiffies for a PID
-// REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::ActiveJiffies(int pid [[maybe_unused]]) { return 0; }
+// DONE: Read and return the number of active jiffies for a PID
+long LinuxParser::ActiveJiffies(int pid) {
+  long total_time = 0;
+  string line, tmp;
+  std::ifstream stream(kProcDirectory + to_string(pid) + kStatFilename);
+  if (stream.is_open()) {
+    for (int i = 0; i < 22; i++) {
+      stream >> tmp;
+      if (i == 14 || i == 15) total_time += stol(tmp);
+    }
+  }
+  return total_time;
+}
 
-// TODO: Read and return the number of active jiffies for the system
-long LinuxParser::ActiveJiffies() { return 0; }
+// DONE: Read and return the number of active jiffies for the system
+long LinuxParser::ActiveJiffies() {
+  auto cpu_data = LinuxParser::CpuUtilization();
+  long active_jiffies = 0;
+  for (int i = 0; i < 10; i++) {
+    if (i != 3 && i != 4) active_jiffies += stol(cpu_data[i]);
+  }
+  return active_jiffies;
+}
 
-// TODO: Read and return the number of idle jiffies for the system
-long LinuxParser::IdleJiffies() { return 0; }
+// DONE: Read and return the number of idle jiffies for the system
+long LinuxParser::IdleJiffies() {
+  auto cpu_data = LinuxParser::CpuUtilization();
+  long idle_jiffies = 0;
+  for (int i = 0; i < 10; i++) {
+    if (i == 3 || i == 4) idle_jiffies += stol(cpu_data[i]);
+  }
+  return idle_jiffies;
+}
 
 // DONE: Read and return CPU utilization
 vector<string> LinuxParser::CpuUtilization() {
@@ -127,7 +158,7 @@ vector<string> LinuxParser::CpuUtilization() {
     std::stringstream stream(line);
     while (getline(stream, word, ' ')) {
       if (isdigit(word[0])) {
-        cpuinfo.push_back(word);
+        cpuinfo.emplace_back(word);
       }
     }
   }
@@ -226,7 +257,9 @@ string LinuxParser::User(int pid) {
       std::replace(line.begin(), line.end(), ':', ' ');
       std::istringstream linestream(line);
       linestream >> user >> temp >> uid;
-      if (uid == target_uid) { return user; }
+      if (uid == target_uid) {
+        return user;
+      }
     }
   }
   return "";
