@@ -20,8 +20,16 @@ You need to properly format the uptime. Refer to the comments mentioned in forma
 // TODO: Return the system's CPU
 Processor& System::Cpu() { return cpu_; }
 
-// TODO: Return a container composed of the system's processes
-vector<Process>& System::Processes() { return processes_; }
+// DONE: Return a container composed of the system's processes
+vector<Process>& System::Processes() {
+  auto pids = LinuxParser::Pids();
+  for (int pid : pids) {
+    if (pid > 25000) {
+    Process new_process = Process(pid);
+    processes_.push_back(new_process);}
+  }
+  return processes_;
+}
 
 // DONE: Return the system's kernel identifier (string)
 std::string System::Kernel() { return LinuxParser::Kernel(); }
